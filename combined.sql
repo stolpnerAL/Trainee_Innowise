@@ -29,9 +29,9 @@ SELECT CONCAT(a.first_name, ' ',  a.last_name) AS actor,
  GROUP BY 1
  ORDER BY 2 DESC)
 
- SELECT actor 
+SELECT actor 
   FROM best_actors
-  LIMIT 10
+ LIMIT 10
  
 	   
 --Display the category of films that generated the highest revenue.
