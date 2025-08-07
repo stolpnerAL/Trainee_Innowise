@@ -1,31 +1,29 @@
 ﻿
---Display the number of films in each category, sorted in descending order.
+--Display the number of films in each category, sorted in descending order
 
-  WITH films_categories AS (
-SELECT f.film_id,
-       c.category_id,
-	   c.name AS category
+SELECT COUNT(f.film_id),
+       c.name AS category
   FROM film AS f
   JOIN film_category AS fc
     ON f.film_id = fc.film_id
   JOIN category AS c
-    ON fc.category_id = c.category_id)
-
-SELECT category,
-       COUNT(1) AS film_cnt
-  FROM films_categories
- GROUP BY category
- ORDER BY 2 desc
+    ON fc.category_id = c.category_id
+ GROUP BY 2
+ ORDER BY 1 desc
 --Display the top 10 actors whose films were rented the most, sorted in descending order.
 
   WITH best_actors AS (
 SELECT CONCAT(a.first_name, ' ',  a.last_name) AS actor,
-       SUM(f.rental_rate) AS rented
+       SUM(l.rental_id) AS rented
   FROM actor AS a
   JOIN film_actor AS fa
     ON a.actor_id = fa.actor_id
   JOIN film AS f
     ON fa.film_id = f.film_id
+  JOIN inventory AS i
+    ON f.film_id = i.film_id
+  JOIN rental AS l
+    ON i.inventory_id = l.inventory_id
  GROUP BY 1
  ORDER BY 2 DESC)
 
@@ -67,12 +65,13 @@ SELECT f.title,
     ON f.film_id = i.film_id
  WHERE i.inventory_id IS NULL
  
+
 --Display the top 3 actors who appeared the most in films within the "Children" category. If multiple actors have the same count, include all.
 
-  WITH task_5 AS (
-SELECT CONCAT (a.first_name, ' ', a.last_name) AS actor,
+  WITH actors_child_films_cnt AS (
+SELECT CONCAT(a.first_name, ' ', a.last_name) AS actor,
        COUNT(f.film_id) AS cnt,
-	   c.name
+       c.name
   FROM actor AS a
   JOIN film_actor AS fa
     ON a.actor_id = fa.actor_id
@@ -83,29 +82,31 @@ SELECT CONCAT (a.first_name, ' ', a.last_name) AS actor,
   JOIN category AS c
     ON fc.category_id = c.category_id
  WHERE c.name = 'Children'
- GROUP BY 1, 3) 
-
-SELECT actor 
-  FROM task_5
- ORDER BY cnt DESC
- LIMIT 3 
+ GROUP BY 1, 3),
+  
+       ranked_actors AS (
+SELECT actor, 
+       cnt,
+DENSE_RANK() OVER (ORDER BY cnt DESC) AS rnk
+  FROM actors_child_films_cnt)
+  
+SELECT actor,
+       cnt,
+	   rnk
+  FROM ranked_actors
+ WHERE rnk <= 3
+ ORDER BY cnt DESC;
 --Display cities with the count of active and inactive customers (active = 1).
 --Sort by the count of inactive customers in descending order.
 
 SELECT c.city,
        SUM(cu.active) AS active,
        COUNT(*) - SUM(cu.active) AS inactive
-  FROM city AS c
-  JOIN address AS a 
-    ON c.city_id = a.city_id
-  JOIN customer AS cu 
-    ON a.address_id = cu.address_id
- GROUP BY 1
- ORDER BY 3 DESC;
---Display the film category with the highest total rental hours in cities 
---where customer.address_id belongs to that city and starts with the letter "a". 
---Do the same for cities containing the symbol "-". Write this in a single query.
-
+FROM city AS c
+JOIN address AS a ON c.city_id = a.city_id
+JOIN customer AS cu ON a.address_id = cu.address_id
+GROUP BY 1
+ORDER BY 3 DESC;
   WITH addresses_cities AS (
 SELECT a.address_id,
        ci.city,
