@@ -58,8 +58,7 @@ SELECT category,
 --Write the query without using the IN operator.
 
 
-SELECT f.title,
-       i.inventory_id
+SELECT f.title
   FROM film AS f
   LEFT JOIN inventory AS i
     ON f.film_id = i.film_id
