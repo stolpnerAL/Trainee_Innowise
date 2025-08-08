@@ -106,6 +106,10 @@ JOIN address AS a ON c.city_id = a.city_id
 JOIN customer AS cu ON a.address_id = cu.address_id
 GROUP BY 1
 ORDER BY 3 DESC;
+--Display the film category with the highest total rental hours in cities 
+--where customer.address_id belongs to that city and starts with the letter "a". 
+--Do the same for cities containing the symbol "-". Write this in a single query.
+
   WITH addresses_cities AS (
 SELECT a.address_id,
        ci.city,
